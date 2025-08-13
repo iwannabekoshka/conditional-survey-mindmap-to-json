@@ -10,7 +10,6 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import downloadFile from "./utils/downloadFile";
 import ButtonsPanel from "./components/buttonsPanel";
 import { TextUpdaterNode } from "./components/TextUpdaterNode";
 import SurveyContext from "./state/context";
@@ -45,39 +44,6 @@ function App() {
     [setEdges]
   );
 
-  const onAddNode = () => dispatch({ type: "ADD_NODE" });
-
-  const onExport = () => {
-    const mappedNodes = nodes.map((n) => ({
-      id: n.id,
-      question: n.data.label,
-    }));
-    const mappedEdges = edges.map((e) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      answer: e.label,
-    }));
-    downloadFile(
-      "survey.json",
-      JSON.stringify({
-        nodes,
-        edges,
-        humanData: { questions: mappedNodes, answers: mappedEdges },
-      })
-    );
-  };
-
-  const onImport = (e) => {
-    const reader = new FileReader();
-    reader.readAsText(e.target.files[0]);
-    reader.onload = function fileReadCompleted() {
-      const json = JSON.parse(reader.result);
-      dispatch({ type: "IMPORT_DATA", payload: json });
-      e.target.value = "";
-    };
-  };
-
   return (
     <SurveyContext.Provider value={{ state, dispatch }}>
       <div style={{ height: "100%", width: "100%" }}>
@@ -95,11 +61,7 @@ function App() {
           <Controls />
 
           <Panel position="top-left">
-            <ButtonsPanel
-              onAddNode={onAddNode}
-              onExport={onExport}
-              onImport={onImport}
-            />
+            <ButtonsPanel />
           </Panel>
         </ReactFlow>
       </div>
