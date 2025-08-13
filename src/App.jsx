@@ -1,54 +1,21 @@
-import { useCallback } from "react";
+import { useReducer, useCallback, useEffect } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
-  addEdge,
   Panel,
   useNodesState,
   useEdgesState,
+  addEdge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import downloadFile from "./utils/downloadFile";
-
 import ButtonsPanel from "./components/buttonsPanel";
 import { TextUpdaterNode } from "./components/TextUpdaterNode";
 import SurveyContext from "./state/context";
 import TextUpdaterEdge from "./components/TextUpdaterEdge";
-
-const createNewNode = (id) => {
-  return {
-    id: id,
-    position: { x: 0, y: 0 },
-    data: { label: "Новый вопрос" },
-    selected: true,
-    type: "textUpdater",
-  };
-};
-const initialNodes = [
-  {
-    id: "n1",
-    position: { x: 0, y: 0 },
-    data: { label: "Вопрос 1" },
-    type: "textUpdater",
-  },
-  {
-    id: "n2",
-    position: { x: 0, y: 300 },
-    data: { label: "Вопрос 2" },
-    type: "textUpdater",
-  },
-];
-const initialEdges = [
-  {
-    id: "n1-n2",
-    source: "n1",
-    target: "n2",
-    label: "Ответ 1",
-    type: "textUpdater",
-  },
-];
+import { reducer, initialState } from "./state/reducer";
 
 const nodeTypes = {
   textUpdater: TextUpdaterNode,
@@ -59,21 +26,27 @@ const edgeTypes = {
 };
 
 function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { nodes: nodesFromReducer, edges: edgesFromReducer } = state;
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialState.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialState.edges);
+
+  useEffect(() => {
+    setNodes(nodesFromReducer);
+  }, [nodesFromReducer, setNodes]);
+
+  useEffect(() => {
+    setEdges(edgesFromReducer);
+  }, [edgesFromReducer, setEdges]);
 
   const onConnect = useCallback(
-    (params) =>
-      setEdges((edgesSnapshot) =>
-        addEdge({ ...params, type: "textUpdater" }, edgesSnapshot)
-      ),
+    (params) => setEdges((eds) => addEdge({ ...params, type: "textUpdater" }, eds)),
     [setEdges]
   );
 
-  const onAddNode = () => {
-    const node = createNewNode(`n${nodes.length + 1}`);
-    setNodes([...nodes.map(n => ({...n, selected: false})), node]);
-  };
+  const onAddNode = () => dispatch({ type: "ADD_NODE" });
+
   const onExport = () => {
     const mappedNodes = nodes.map((n) => ({
       id: n.id,
@@ -94,20 +67,19 @@ function App() {
       })
     );
   };
+
   const onImport = (e) => {
     const reader = new FileReader();
     reader.readAsText(e.target.files[0]);
     reader.onload = function fileReadCompleted() {
       const json = JSON.parse(reader.result);
-      setNodes(json.nodes);
-      setEdges(json.edges);
-
-      e.target.value = '';
+      dispatch({ type: "IMPORT_DATA", payload: json });
+      e.target.value = "";
     };
   };
 
   return (
-    <SurveyContext value={{ nodes, setNodes, setEdges }}>
+    <SurveyContext.Provider value={{ state, dispatch }}>
       <div style={{ height: "100%", width: "100%" }}>
         <ReactFlow
           nodes={nodes}
@@ -131,7 +103,7 @@ function App() {
           </Panel>
         </ReactFlow>
       </div>
-    </SurveyContext>
+    </SurveyContext.Provider>
   );
 }
 

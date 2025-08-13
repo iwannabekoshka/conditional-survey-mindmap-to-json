@@ -3,7 +3,7 @@ import {
   getBezierPath,
   EdgeLabelRenderer,
 } from "@xyflow/react";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import SurveyContext from "../state/context";
 
 export function TextUpdaterEdge({
@@ -14,8 +14,7 @@ export function TextUpdaterEdge({
   targetY,
   label,
 }) {
-  const { setEdges } = useContext(SurveyContext);
-  const [edgeLabel, setEdgeLabel] = useState(label);
+  const { dispatch } = useContext(SurveyContext);
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -26,16 +25,11 @@ export function TextUpdaterEdge({
 
   const onChange = (e) => {
     const value = e.target.value;
-
-    setEdgeLabel(value);
-
-    setEdges((prev) => {
-      const edge = prev.find((n) => n.id === id);
-      edge.label = value;
-
-      return [...prev];
+    dispatch({
+      type: "UPDATE_EDGE_LABEL",
+      payload: { edgeId: id, label: value },
     });
-  }
+  };
 
   return (
     <>
@@ -51,7 +45,7 @@ export function TextUpdaterEdge({
           }}
           className="nodrag nopan"
           placeholder="Some answer"
-          value={edgeLabel}
+          value={label}
           onChange={onChange}
         />
       </EdgeLabelRenderer>

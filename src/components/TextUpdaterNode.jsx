@@ -1,30 +1,25 @@
 import { memo, useContext, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import SurveyContext from "../state/context";
-
 import Editor from "react-simple-wysiwyg";
 
-
 export function TextUpdaterNode(props) {
-  const { setNodes } = useContext(SurveyContext);
+  const { dispatch } = useContext(SurveyContext);
   const [isResult, setIsResult] = useState(!!props.data.isResult);
 
   function onChangeText(e) {
-    setNodes(prev => {
-      const node = prev.find(p => p.id === props.id);
-      node.data.label = e.target.value;
-
-      return [...prev];
+    dispatch({
+      type: "UPDATE_NODE_TEXT",
+      payload: { nodeId: props.id, text: e.target.value },
     });
   }
 
   function onChangeIsResult() {
-    setIsResult(!isResult);
-    setNodes(prev => {
-      const node = prev.find(p => p.id === props.id);
-      node.data.isResult = !isResult;
-
-      return [...prev];
+    const newIsResult = !isResult;
+    setIsResult(newIsResult);
+    dispatch({
+      type: "UPDATE_NODE_IS_RESULT",
+      payload: { nodeId: props.id, isResult: newIsResult },
     });
   }
 

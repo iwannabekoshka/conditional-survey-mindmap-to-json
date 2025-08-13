@@ -1,5 +1,7 @@
 import { createContext } from 'react';
 
-const SurveyContext = createContext({});
+const SurveyContext = createContext({
+  dispatch: () => {},
+});
 
 export default SurveyContext;
